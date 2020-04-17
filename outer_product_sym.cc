@@ -48,6 +48,23 @@ SymmetricTensor<4,dim> outer_product_sym( const SymmetricTensor<2,dim> &A, const
 				}
 	return D;
 }
+template<int dim>
+SymmetricTensor<4,dim> outer_product_sym( const SymmetricTensor<2,dim> &A )
+{
+	SymmetricTensor<4,dim> D;
+	// Special nested for-loop to access only non-symmetric entries of 4th order sym. tensor
+	// ToDo: still not optimal element 1112 and 1211 are both accessed
+	for ( unsigned int i=0; i<dim; ++i )
+    	for ( unsigned int j=i; j<dim; ++j )
+        	for ( unsigned int k=i; k<dim; ++k )
+            	for ( unsigned int l=k; l<dim; ++l )
+            	{
+            		double tmp = A[i][j] * A[k][l];
+            		D[i][j][k][l] = tmp;
+            		D[k][l][i][j] = tmp;
+            	}
+	return D;
+}
 
 
 //----------------------------------------------------
@@ -171,9 +188,16 @@ int main ()
     }
     timer.leave_subsection ("Ma_x_Ma-for3");
     
+    SymmetricTensor<4,dim> Ma_x_Ma_for4;
+    timer.enter_subsection ("Ma_x_Ma-for4");
+    for ( unsigned int i=0; i<10000; i++)
+    	Ma_x_Ma_for4 = outer_product_sym(Ma[0]);
+    timer.leave_subsection ("Ma_x_Ma-for4");
+    
     double error_for = 0.;
     double error_for2 = 0.;
     double error_for3 = 0.;
+    double error_for4 = 0.;
 	for ( unsigned int i=0; i<dim; ++i )
     	for ( unsigned int j=0; j<dim; ++j )
         	for ( unsigned int k=0; k<dim; ++k )
@@ -182,6 +206,7 @@ int main ()
             		error_for += std::abs(Ma_x_Ma[i][j][k][l]-Ma_x_Ma_for[i][j][k][l]);
             		error_for2 += std::abs(Ma_x_Ma[i][j][k][l]-Ma_x_Ma_for2[i][j][k][l]);
             		error_for3 += std::abs(Ma_x_Ma[i][j][k][l]-Ma_x_Ma_for3[i][j][k][l]);
+            		error_for4 += std::abs(Ma_x_Ma[i][j][k][l]-Ma_x_Ma_for4[i][j][k][l]);
             	}
 	
 	std::cout << std::endl;
@@ -189,7 +214,8 @@ int main ()
     std::cout << "Ma_x_Ma_for= " << Ma_x_Ma_for << " with error=" << error_for << std::endl;
     std::cout << "Ma_x_Ma_for2=" << Ma_x_Ma_for2 << " with error=" << error_for2 << std::endl;
     std::cout << "Ma_x_Ma_for3=" << Ma_x_Ma_for3 << " with error=" << error_for3 << std::endl;
-    
+    std::cout << "Ma_x_Ma_for4=" << Ma_x_Ma_for4 << " with error=" << error_for4 << std::endl;
+
     
     // @section Sym2 Outer product of two identical 2nd order symmetric tensors
     SymmetricTensor<4,dim> D;
