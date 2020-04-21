@@ -7,3 +7,6 @@ outer product/dyadic product/"x"
 D = outer_product_sym(A,B) = AxB + BxA;
 
 D = outer_product_sym(A) = AxA;
+
+## ToDo
+* check use of C++ "inline" and suchlike for efficiency
